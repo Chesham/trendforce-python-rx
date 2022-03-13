@@ -30,6 +30,23 @@ def stepGroupTicks(ctx):
         )
     )
 
+@when('將資料源資料以 500 豪秒做為鍵值分群')
+def stepGroupTicks(ctx):
+    ctx.source = ctx.source.pipe(
+        operators.group_by_until(
+            lambda x: datetime(x['ts'].year,
+                x['ts'].month,
+                x['ts'].day,
+                x['ts'].hour,
+                x['ts'].minute,
+                x['ts'].second,
+                (int(f"{x['ts'].microsecond:06d}"[0:3]) - (int(f"{x['ts'].microsecond:06d}"[0:3]) % 500)) * 1000
+            ),
+            None,
+            lambda g: rx.timer(1)
+        )
+    )
+
 @when('接收資料直到結束')
 def stepReceiveUntilCompleted(ctx):
     cv = Condition()
